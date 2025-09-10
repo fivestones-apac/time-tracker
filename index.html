@@ -8,27 +8,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Use setLogLevel('debug') for debugging purposes
         setLogLevel('debug');
 
-        let firebaseConfig, authToken;
         const db = (() => {
             try {
-                // The app ID should be part of the config object, not a separate variable
-                firebaseConfig = {
-                                    apiKey: "AIzaSyCR3t5rHz-Jx8tLZBBFFE7_Ih371AhdBLA",
-                                    authDomain: "fs-time-tracker.firebaseapp.com",
-                                    projectId: "fs-time-tracker",
-                                    storageBucket: "fs-time-tracker.firebasestorage.app",
-                                    messagingSenderId: "885412838602",
-                                    appId: "1:885412838602:web:5764bed2c73bf90c440833"
-                                };
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCR3t5rHz-Jx8tLZBBFFE7_Ih371AhdBLA",
+                    authDomain: "fs-time-tracker.firebaseapp.com",
+                    projectId: "fs-time-tracker",
+                    storageBucket: "fs-time-tracker.firebasestorage.app",
+                    messagingSenderId: "885412838602",
+                    appId: "1:885412838602:web:5764bed2c73bf90c440833"
+                };
                 
-                // Initialize the app with the config object only.
                 const app = initializeApp(firebaseConfig);
                 return getFirestore(app);
             } catch (e) {
@@ -49,8 +46,8 @@
             timerDisplay: '00:00:00',
             logEntries: [],
             users: {},
-            selectedUserFilter: 'all', // New state for user filter
-            selectedProjectFilter: 'all' // New state for project filter
+            selectedUserFilter: 'all', 
+            selectedProjectFilter: 'all' 
         };
         
         const ui = {
@@ -72,8 +69,8 @@
             nameForm: document.getElementById('name-form'),
             nameInput: document.getElementById('name-input'),
             userNameDisplay: document.getElementById('user-name-display'),
-            userFilter: document.getElementById('user-filter'), // New UI element
-            projectFilter: document.getElementById('project-filter') // New UI element
+            userFilter: document.getElementById('user-filter'), 
+            projectFilter: document.getElementById('project-filter') 
         };
 
         function showModal(message) {
@@ -129,11 +126,7 @@
             } else {
                 if (auth) {
                     try {
-                        if (authToken) {
-                            await signInWithCustomToken(auth, authToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        await signInAnonymously(auth);
                     } catch (error) {
                         showModal(`Authentication failed: ${error.message}`);
                     }
