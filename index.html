@@ -15,10 +15,10 @@
         // Use setLogLevel('debug') for debugging purposes
         setLogLevel('debug');
 
-        let firebaseConfig, appId, authToken;
+        let firebaseConfig, authToken;
         const db = (() => {
             try {
-                
+                // The app ID should be part of the config object, not a separate variable
                 firebaseConfig = {
                                     apiKey: "AIzaSyCR3t5rHz-Jx8tLZBBFFE7_Ih371AhdBLA",
                                     authDomain: "fs-time-tracker.firebaseapp.com",
@@ -28,7 +28,8 @@
                                     appId: "1:885412838602:web:5764bed2c73bf90c440833"
                                 };
                 
-                const app = initializeApp(firebaseConfig, appId);
+                // Initialize the app with the config object only.
+                const app = initializeApp(firebaseConfig);
                 return getFirestore(app);
             } catch (e) {
                 console.error("Firebase initialization failed:", e);
@@ -85,9 +86,9 @@
         });
 
         // Firestore paths
-        const getProjectsPath = () => `artifacts/${appId}/public/data/projects`;
-        const getLogPath = () => `artifacts/${appId}/public/data/logs`;
-        const getUsersPath = () => `artifacts/${appId}/public/data/users`;
+        const getProjectsPath = () => `projects`;
+        const getLogPath = () => `logs`;
+        const getUsersPath = () => `users`;
         const projectsCollection = db ? collection(db, getProjectsPath()) : null;
         const logsCollection = db ? collection(db, getLogPath()) : null;
         const usersCollection = db ? collection(db, getUsersPath()) : null;
