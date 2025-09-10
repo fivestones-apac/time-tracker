@@ -74,6 +74,8 @@
             googleSignInButton: document.getElementById('google-sign-in-button'),
             signOutButton: document.getElementById('sign-out-button'),
             authenticatedUI: document.getElementById('authenticated-ui'),
+            logWrapper: document.getElementById('log-container-wrapper'),
+            authUI: document.getElementById('auth-ui')
         };
 
         function showModal(message) {
@@ -119,15 +121,18 @@
                 ui.userIdDisplay.textContent = `User ID: ${state.userId}`;
                 ui.userNameDisplay.textContent = state.userName;
                 
+                // Show authenticated UI and hide auth UI
+                ui.authUI.classList.add('hidden');
+                ui.authenticatedUI.classList.remove('hidden');
+                ui.authenticatedUI.classList.add('inline-flex');
+                ui.logWrapper.classList.remove('hidden');
+
                 // Add/update user in the 'users' collection with their Google name
                 if (db) {
                     await setDoc(doc(usersCollection, state.userId), { name: state.userName, email: user.email });
                     subscribeToUsers();
                     subscribeToProjects();
                     subscribeToLogEntries();
-                    ui.googleSignInButton.classList.add('hidden');
-                    ui.signOutButton.classList.remove('hidden');
-                    ui.authenticatedUI.classList.remove('hidden');
                 } else {
                     showModal('Failed to connect to the database. Time tracking will not be saved.');
                 }
@@ -136,9 +141,12 @@
                 state.userName = 'Anonymous';
                 ui.userIdDisplay.textContent = '...';
                 ui.userNameDisplay.textContent = 'Anonymous';
-                ui.googleSignInButton.classList.remove('hidden');
-                ui.signOutButton.classList.add('hidden');
+                
+                // Show auth UI and hide authenticated UI
+                ui.authUI.classList.remove('hidden');
                 ui.authenticatedUI.classList.add('hidden');
+                ui.authenticatedUI.classList.remove('inline-flex');
+                ui.logWrapper.classList.add('hidden');
             }
             updateUI();
         });
