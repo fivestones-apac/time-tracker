@@ -124,7 +124,6 @@
                 // Show authenticated UI and hide auth UI
                 ui.authUI.classList.add('hidden');
                 ui.authenticatedUI.classList.remove('hidden');
-                ui.authenticatedUI.classList.add('inline-flex');
                 ui.logWrapper.classList.remove('hidden');
 
                 // Add/update user in the 'users' collection with their Google name
@@ -145,7 +144,6 @@
                 // Show auth UI and hide authenticated UI
                 ui.authUI.classList.remove('hidden');
                 ui.authenticatedUI.classList.add('hidden');
-                ui.authenticatedUI.classList.remove('inline-flex');
                 ui.logWrapper.classList.add('hidden');
             }
             updateUI();
@@ -383,7 +381,7 @@
                     <br>
                     ID: <span id="user-id-display">...</span>
                 </p>
-                <button id="sign-out-button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-xl font-bold hover:bg-gray-400 transition-colors hidden">Sign Out</button>
+                <button id="sign-out-button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-xl font-bold hover:bg-gray-400 transition-colors">Sign Out</button>
             </div>
 
             <!-- Project Selection -->
