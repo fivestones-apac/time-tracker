@@ -5,7 +5,481 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Collaborative Time Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative Time Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 900px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="container bg-white p-8 rounded-3xl shadow-2xl flex flex-col lg:flex-row gap-8">
+        
+        <!-- Left Panel: Time Tracker UI -->
+        <div id="authenticated-ui" class="flex-1 hidden">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Time Tracker</h1>
+            <p class="text-gray-500 mb-6">Start tracking time for your projects below.</p>
+
+            <!-- User Info -->
+            <div id="user-info" class="bg-blue-50 p-4 rounded-xl mb-6 flex justify-between items-center">
+                <p class="font-mono text-xs text-blue-600 break-all">
+                    User: <span id="user-name-display"></span>
+                    <br>
+                    ID: <span id="user-id-display">...</span>
+                </p>
+                <button id="sign-out-button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-xl font-bold hover:bg-gray-400 transition-colors">Sign Out</button>
+            </div>
+
+            <!-- Project Selection -->
+            <div class="mb-6">
+                <label for="project-select" class="block text-sm font-medium text-gray-700 mb-2">Select a Project</label>
+                <select id="project-select" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                    <option value="" disabled selected>No projects available...</option>
+                </select>
+            </div>
+            
+            <!-- Timer Display -->
+            <div class="text-center mb-6">
+                <div id="timer-display" class="font-mono text-6xl md:text-7xl font-light text-gray-800 tracking-wide">
+                    00:00:00
+                </div>
+                <p id="status-message" class="text-sm text-gray-500 mt-2">Ready to track.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 justify-center mb-8">
+                <button id="start-button" class="flex-1 px-6 py-3 bg-green-500 text-white font-bold rounded-xl shadow-lg hover:bg-green-600 transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:shadow-none disabled:transform-none">
+                    <i class="fas fa-play mr-2"></i>Start
+                </button>
+                <button id="stop-button" disabled class="flex-1 px-6 py-3 bg-red-500 text-white font-bold rounded-xl shadow-lg hover:bg-red-600 transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:shadow-none disabled:transform-none">
+                    <i class="fas fa-stop mr-2"></i>Stop
+                </button>
+                <button id="reset-button" disabled class="px-6 py-3 bg-gray-500 text-white font-bold rounded-xl shadow-lg hover:bg-gray-600 transition-all transform hover:scale-105 disabled:bg-gray-300 disabled:shadow-none disabled:transform-none">
+                    <i class="fas fa-undo mr-2"></i>Reset
+                </button>
+            </div>
+            
+            <!-- Create New Project Form -->
+            <div class="bg-gray-50 p-6 rounded-xl shadow-inner">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Add New Project</h3>
+                <form id="project-form" class="flex gap-3">
+                    <input type="text" id="new-project-name" placeholder="Enter project name..." class="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <button type="submit" class="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-all">
+                        <i class="fas fa-plus mr-2"></i>Add
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Panel: Log of Entries -->
+        <div class="flex-1 mt-8 lg:mt-0" id="log-container-wrapper">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Recent Entries</h2>
+
+            <!-- Filter Controls -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <label for="user-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by User</label>
+                    <select id="user-filter" class="w-full p-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                        <option value="all">All Users</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="project-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Project</label>
+                    <select id="project-filter" class="w-full p-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                        <option value="all">All Projects</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="log-container" class="space-y-4">
+                <!-- Log entries will be populated here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Auth UI -->
+        <div id="auth-ui" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Sign In</h2>
+            <p class="text-gray-500 mb-6">Please sign in to access the time tracker.</p>
+            <button id="google-sign-in-button" class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+                <i class="fab fa-google"></i> Sign In with Google
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
+            <p id="modal-message" class="text-lg text-gray-700 mb-6"></p>
+            <button id="modal-close-button" class="w-full px-4 py-2 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+        
+        // Use setLogLevel('debug') for debugging purposes
+        setLogLevel('debug');
+
+        const db = (() => {
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyCR3t5rHz-Jx8tLZBBFFE7_Ih371AhdBLA",
+                    authDomain: "fs-time-tracker.firebaseapp.com",
+                    projectId: "fs-time-tracker",
+                    storageBucket: "fs-time-tracker.firebasestorage.app",
+                    messagingSenderId: "885412838602",
+                    appId: "1:885412838602:web:5764bed2c73bf90c440833"
+                };
+                
+                const app = initializeApp(firebaseConfig);
+                return getFirestore(app);
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+                return null;
+            }
+        })();
+        const auth = db ? getAuth(db.app) : null;
+
+        const state = {
+            isTracking: false,
+            trackingStartTime: null,
+            timerInterval: null,
+            userId: null,
+            userName: 'Anonymous',
+            projects: {},
+            selectedProject: null,
+            timerDisplay: '00:00:00',
+            logEntries: [],
+            users: {},
+            selectedUserFilter: 'all', 
+            selectedProjectFilter: 'all' 
+        };
+        
+        const ui = {
+            projectForm: document.getElementById('project-form'),
+            projectNameInput: document.getElementById('new-project-name'),
+            projectsList: document.getElementById('projects-list'),
+            timerDisplay: document.getElementById('timer-display'),
+            startButton: document.getElementById('start-button'),
+            stopButton: document.getElementById('stop-button'),
+            resetButton: document.getElementById('reset-button'),
+            projectSelect: document.getElementById('project-select'),
+            logContainer: document.getElementById('log-container'),
+            statusMessage: document.getElementById('status-message'),
+            userIdDisplay: document.getElementById('user-id-display'),
+            modal: document.getElementById('modal'),
+            modalMessage: document.getElementById('modal-message'),
+            modalCloseButton: document.getElementById('modal-close-button'),
+            nameModal: document.getElementById('name-modal'),
+            nameForm: document.getElementById('name-form'),
+            nameInput: document.getElementById('name-input'),
+            userNameDisplay: document.getElementById('user-name-display'),
+            userFilter: document.getElementById('user-filter'), 
+            projectFilter: document.getElementById('project-filter'),
+            googleSignInButton: document.getElementById('google-sign-in-button'),
+            signOutButton: document.getElementById('sign-out-button'),
+            authenticatedUI: document.getElementById('authenticated-ui'),
+            logWrapper: document.getElementById('log-container-wrapper'),
+            authUI: document.getElementById('auth-ui')
+        };
+
+        function showModal(message) {
+            ui.modalMessage.textContent = message;
+            ui.modal.classList.remove('hidden');
+        }
+
+        ui.modalCloseButton.addEventListener('click', () => {
+            ui.modal.classList.add('hidden');
+        });
+
+        // Firestore paths
+        const getProjectsPath = () => `projects`;
+        const getLogPath = () => `logs`;
+        const getUsersPath = () => `users`;
+        const projectsCollection = db ? collection(db, getProjectsPath()) : null;
+        const logsCollection = db ? collection(db, getLogPath()) : null;
+        const usersCollection = db ? collection(db, getUsersPath()) : null;
+
+        // Authentication logic
+        ui.googleSignInButton.addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Google sign-in failed:", error);
+                showModal(`Google sign-in failed. Please try again. Error: ${error.message}`);
+            }
+        });
+        
+        ui.signOutButton.addEventListener('click', async () => {
+            await signOut(auth);
+            state.userId = null;
+            state.userName = 'Anonymous';
+            updateUI();
+        });
+
+        // Use onAuthStateChanged to manage user state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                state.userId = user.uid;
+                state.userName = user.displayName || 'Unnamed User';
+                ui.userIdDisplay.textContent = `User ID: ${state.userId}`;
+                ui.userNameDisplay.textContent = state.userName;
+                
+                // Show authenticated UI and hide auth UI
+                ui.authUI.classList.add('hidden');
+                ui.authenticatedUI.classList.remove('hidden');
+                ui.logWrapper.classList.remove('hidden');
+
+                // Add/update user in the 'users' collection with their Google name
+                if (db) {
+                    await setDoc(doc(usersCollection, state.userId), { name: state.userName, email: user.email });
+                    subscribeToUsers();
+                    subscribeToProjects();
+                    subscribeToLogEntries();
+                } else {
+                    showModal('Failed to connect to the database. Time tracking will not be saved.');
+                }
+            } else {
+                state.userId = null;
+                state.userName = 'Anonymous';
+                ui.userIdDisplay.textContent = '...';
+                ui.userNameDisplay.textContent = 'Anonymous';
+                
+                // Show auth UI and hide authenticated UI
+                ui.authUI.classList.remove('hidden');
+                ui.authenticatedUI.classList.add('hidden');
+                ui.logWrapper.classList.add('hidden');
+            }
+            updateUI();
+        });
+
+        function subscribeToUsers() {
+            if (!usersCollection) return;
+            onSnapshot(usersCollection, (snapshot) => {
+                state.users = {};
+                ui.userFilter.innerHTML = '<option value="all">All Users</option>';
+                snapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    state.users[doc.id] = userData.name;
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = userData.name;
+                    ui.userFilter.appendChild(option);
+                });
+                ui.userFilter.value = state.selectedUserFilter;
+                updateUI();
+            });
+        }
+
+        function subscribeToProjects() {
+            if (!projectsCollection) return;
+            onSnapshot(projectsCollection, (snapshot) => {
+                ui.projectSelect.innerHTML = '';
+                ui.projectFilter.innerHTML = '<option value="all">All Projects</option>';
+                state.projects = {};
+                snapshot.forEach((doc) => {
+                    const project = { id: doc.id, ...doc.data() };
+                    state.projects[project.id] = project;
+                    
+                    const projectOption = document.createElement('option');
+                    projectOption.value = project.id;
+                    projectOption.textContent = project.name;
+                    ui.projectSelect.appendChild(projectOption);
+
+                    const filterOption = document.createElement('option');
+                    filterOption.value = project.id;
+                    filterOption.textContent = project.name;
+                    ui.projectFilter.appendChild(filterOption);
+                });
+                if (ui.projectSelect.options.length > 0) {
+                    ui.projectSelect.value = state.selectedProject ? state.selectedProject.id : ui.projectSelect.options[0].value;
+                    state.selectedProject = state.projects[ui.projectSelect.value];
+                }
+                ui.projectFilter.value = state.selectedProjectFilter;
+                updateUI();
+            });
+        }
+
+        function subscribeToLogEntries() {
+            if (!logsCollection) return;
+            const logQuery = query(logsCollection);
+            onSnapshot(logQuery, (snapshot) => {
+                state.logEntries = [];
+                snapshot.forEach((doc) => {
+                    state.logEntries.push({ id: doc.id, ...doc.data() });
+                });
+                state.logEntries.sort((a, b) => b.end.toDate() - a.end.toDate());
+                updateUI();
+            });
+        }
+
+        ui.projectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newProjectName = ui.projectNameInput.value.trim();
+            if (newProjectName && projectsCollection) {
+                await addDoc(projectsCollection, {
+                    name: newProjectName,
+                    createdAt: serverTimestamp(),
+                    createdBy: state.userId
+                });
+                ui.projectNameInput.value = '';
+                showModal(`Project "${newProjectName}" created successfully!`);
+            } else if (!newProjectName) {
+                showModal('Please enter a project name.');
+            }
+        });
+
+        ui.projectSelect.addEventListener('change', (e) => {
+            const projectId = e.target.value;
+            state.selectedProject = state.projects[projectId];
+            updateUI();
+        });
+
+        // New event listeners for filter dropdowns
+        ui.userFilter.addEventListener('change', (e) => {
+            state.selectedUserFilter = e.target.value;
+            updateUI();
+        });
+
+        ui.projectFilter.addEventListener('change', (e) => {
+            state.selectedProjectFilter = e.target.value;
+            updateUI();
+        });
+
+        ui.startButton.addEventListener('click', () => {
+            if (state.selectedProject && !state.isTracking) {
+                state.isTracking = true;
+                state.trackingStartTime = Date.now();
+                state.timerInterval = setInterval(updateTimer, 1000);
+                updateUI();
+                ui.statusMessage.textContent = `Tracking time for: ${state.selectedProject.name}`;
+            } else if (!state.selectedProject) {
+                showModal('Please select a project before starting.');
+            }
+        });
+
+        ui.stopButton.addEventListener('click', async () => {
+            if (state.isTracking) {
+                clearInterval(state.timerInterval);
+                state.isTracking = false;
+                const endTime = Date.now();
+                const durationSeconds = Math.round((endTime - state.trackingStartTime) / 1000);
+
+                if (logsCollection) {
+                    await addDoc(logsCollection, {
+                        projectId: state.selectedProject.id,
+                        projectName: state.selectedProject.name,
+                        startTime: new Date(state.trackingStartTime),
+                        end: new Date(endTime),
+                        duration: durationSeconds,
+                        userId: state.userId,
+                        createdAt: serverTimestamp()
+                    });
+                    showModal(`Time entry saved! Duration: ${formatTime(durationSeconds)}`);
+                } else {
+                    showModal(`Time entry not saved. Database connection failed. Duration: ${formatTime(durationSeconds)}`);
+                }
+
+                state.trackingStartTime = null;
+                state.timerDisplay = '00:00:00';
+                ui.statusMessage.textContent = 'Ready to track.';
+                updateUI();
+            }
+        });
+
+        ui.resetButton.addEventListener('click', () => {
+            if (state.isTracking) {
+                clearInterval(state.timerInterval);
+                state.isTracking = false;
+                state.trackingStartTime = null;
+            }
+            state.timerDisplay = '00:00:00';
+            ui.statusMessage.textContent = 'Ready to track.';
+            updateUI();
+        });
+
+        function updateTimer() {
+            if (state.isTracking && state.trackingStartTime) {
+                const elapsedSeconds = Math.round((Date.now() - state.trackingStartTime) / 1000);
+                state.timerDisplay = formatTime(elapsedSeconds);
+                updateUI();
+            }
+        }
+
+        function formatTime(seconds) {
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        function updateUI() {
+            ui.timerDisplay.textContent = state.timerDisplay;
+            ui.userNameDisplay.textContent = state.userName;
+
+            ui.startButton.disabled = state.isTracking || !state.selectedProject;
+            ui.stopButton.disabled = !state.isTracking;
+            ui.resetButton.disabled = !state.isTracking;
+
+            // Apply filters to log entries before rendering
+            const filteredEntries = state.logEntries.filter(entry => {
+                const userMatch = state.selectedUserFilter === 'all' || entry.userId === state.selectedUserFilter;
+                const projectMatch = state.selectedProjectFilter === 'all' || entry.projectId === state.selectedProjectFilter;
+                return userMatch && projectMatch;
+            });
+
+            // Update log display
+            ui.logContainer.innerHTML = '';
+            if (filteredEntries.length === 0) {
+                ui.logContainer.innerHTML = '<p class="text-gray-500 italic">No time entries match the selected filters.</p>';
+            } else {
+                filteredEntries.forEach(entry => {
+                    const userName = state.users[entry.userId] || 'Anonymous';
+                    const logItem = document.createElement('div');
+                    logItem.className = 'bg-white p-4 rounded-xl shadow mb-2 flex flex-col sm:flex-row items-start sm:items-center justify-between';
+                    const durationText = formatTime(entry.duration);
+                    logItem.innerHTML = `
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-lg">${entry.projectName}</h4>
+                            <p class="text-gray-600">Duration: <span class="font-mono">${durationText}</span></p>
+                            <p class="text-sm text-gray-500 mt-1 sm:mt-0">User: ${userName}</p>
+                        </div>
+                        <div class="text-right text-sm text-gray-400 mt-2 sm:mt-0">
+                            ${new Date(entry.end.seconds * 1000).toLocaleString()}
+                        </div>
+                    `;
+                    ui.logContainer.appendChild(logItem);
+                });
+            }
+        }
+
+        window.onload = () => {
+            updateUI();
+        };
+
+    </script>
+</body>
+</html>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
