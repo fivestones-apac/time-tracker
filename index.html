@@ -227,24 +227,34 @@
         // Use onAuthStateChanged to manage user state
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                state.userId = user.uid;
-                state.userName = user.displayName || 'Unnamed User';
-                ui.userIdDisplay.textContent = `User ID: ${state.userId}`;
-                ui.userNameDisplay.textContent = state.userName;
+                // Check if user is in the allowed users list
+                const allowedUsersCollection = collection(db, 'allowed_users');
+                const userDoc = await getDoc(doc(allowedUsersCollection, user.email));
                 
-                // Show authenticated UI and hide auth UI
-                ui.authUI.classList.add('hidden');
-                ui.authenticatedUI.classList.remove('hidden');
-                ui.logWrapper.classList.remove('hidden');
+                if (userDoc.exists()) {
+                    state.userId = user.uid;
+                    state.userName = user.displayName || 'Unnamed User';
+                    ui.userIdDisplay.textContent = `User ID: ${state.userId}`;
+                    ui.userNameDisplay.textContent = state.userName;
+                    
+                    // Show authenticated UI and hide auth UI
+                    ui.authUI.classList.add('hidden');
+                    ui.authenticatedUI.classList.remove('hidden');
+                    ui.logWrapper.classList.remove('hidden');
 
-                // Add/update user in the 'users' collection with their Google name
-                if (db) {
-                    await setDoc(doc(usersCollection, state.userId), { name: state.userName, email: user.email });
-                    subscribeToUsers();
-                    subscribeToProjects();
-                    subscribeToLogEntries();
+                    // Add/update user in the 'users' collection with their Google name
+                    if (db) {
+                        await setDoc(doc(usersCollection, state.userId), { name: state.userName, email: user.email });
+                        subscribeToUsers();
+                        subscribeToProjects();
+                        subscribeToLogEntries();
+                    } else {
+                        showModal('Failed to connect to the database. Time tracking will not be saved.');
+                    }
                 } else {
-                    showModal('Failed to connect to the database. Time tracking will not be saved.');
+                    // User is not in the allowed list, sign them out and show a message
+                    await signOut(auth);
+                    showModal('Access Denied. Your email is not on the allowed list.');
                 }
             } else {
                 state.userId = null;
